@@ -1,0 +1,40 @@
+{
+  "name": "salesbot",
+  "version": "1.0.0",
+  "description": "Visual programming of controlled scenarios",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "npm run lint && npm run secure",
+    "lint": "./node_modules/.bin/eslint ./src; exit 0;",
+    "secure": "./node_modules/.bin/nsp check"
+  },
+  "author": "Belskiy Roman",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server-express": "^1.3.2",
+    "body-parser": "^1.18.2",
+    "casual": "^1.5.19",
+    "cors": "^2.8.4",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.2",
+    "graphql": "^0.13.1",
+    "graphql-tools": "^2.21.0",
+    "helmet": "^3.11.0",
+    "pg": "^7.4.1",
+    "pg-hstore": "^2.3.2",
+    "sequelize": "^4.35.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.18.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-config-standard-jsx": "^5.0.0",
+    "eslint-plugin-import": "^2.9.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-react": "^7.7.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "nsp": "^3.2.1",
+    "nsp-reporter-checkstyle": "^1.1.0",
+    "sequelize-cli": "^4.0.0"
+  }
+}
