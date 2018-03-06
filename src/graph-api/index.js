@@ -1,7 +1,7 @@
 const { mergeSchemas } = require('graphql-tools');
 
 const schemas = [
-  require('./book'),
+  require('./user'),
 ];
 
 module.exports = mergeSchemas({ schemas });
