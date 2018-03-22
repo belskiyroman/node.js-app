@@ -11,6 +11,11 @@ const deserializeUser = (id, cb) => {
     .catch(cb);
 };
 
+/**
+ *
+ * @param passport
+ * @return {*}
+ */
 module.exports.initSession = (passport) => {
   passport.serializeUser(serializeUser);
   passport.deserializeUser(deserializeUser);

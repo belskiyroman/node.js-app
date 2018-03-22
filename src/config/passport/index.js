@@ -7,4 +7,8 @@ session.disableSession(passport)
 passport.use(localStrategy);
 passport.use(jwtStrategy);
 
+/**
+ *
+ * @type {Passport}
+ */
 module.exports = passport;

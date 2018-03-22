@@ -4,4 +4,8 @@ const schemas = [
   require('./user'),
 ];
 
+/**
+ *
+ * @type {GraphQLSchema}
+ */
 module.exports = mergeSchemas({ schemas });

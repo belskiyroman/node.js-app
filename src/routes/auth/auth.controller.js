@@ -7,6 +7,12 @@ class AuthController {
     this.sendError = sendError;
   }
 
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns {Promise.<void>}
+   */
   async registration (req, res) {
     try {
       const newUser = await this.UserModel.create(req.body);
@@ -16,6 +22,12 @@ class AuthController {
     }
   }
 
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns {Promise.<void>}
+   */
   async login (req, res) {
     try {
       const { token } = await req.user.createUserLogin({});
@@ -25,15 +37,27 @@ class AuthController {
     }
   }
 
-  async logout (req, res) {
+  /**
+   *
+   * @param req
+   * @param res
+   * @returns {Promise.<void>}
+   */
+  async logout ({user}, res) {
     try {
-      await req.user.removeUserLogin(req.user.currentLogin);
+      await user.removeUserLogin(user.currentLogin);
       this._sendData(res);
     } catch (err) {
       this.sendError(res, err);
     }
   }
 
+  /**
+   *
+   * @param res
+   * @param data
+   * @private
+   */
   _sendData (res, data = null) {
     res.send({
       success: true,
@@ -42,4 +66,8 @@ class AuthController {
   };
 }
 
+/**
+ *
+ * @type {AuthController}
+ */
 module.exports = new AuthController(User, sendError);
