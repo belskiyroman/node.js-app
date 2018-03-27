@@ -2,7 +2,7 @@ const ValidationError = require('sequelize').ValidationError;
 const DatabaseError = require('sequelize').DatabaseError;
 const HTTP_CODE = require('../constants/http-code.const');
 
-module.exports.sendError = (res, err, statusCode) => {
+module.exports.sendError = (err, res, statusCode) => {
   let errors = [{message: 'Internal server error.'}];
   let status = statusCode || HTTP_CODE.INTERNAL_SERVER_ERROR;
 

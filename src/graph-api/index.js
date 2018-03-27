@@ -1,7 +1,5 @@
-const { mergeSchemas } = require('graphql-tools');
+const GraphQLSchema = require('graphql').GraphQLSchema;
+const query = require('./query');
+const mutation = require('./mutation');
 
-const schemas = [
-  require('./user'),
-];
-
-module.exports = mergeSchemas({ schemas });
+module.exports = new GraphQLSchema({ query, mutation });

@@ -18,11 +18,11 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 // routes
-require('./routes/auth')(app);
+require('./routes/auth-rest')(app);
 require('./routes/graphql')(app);
 
 // global error handler
-app.use((err, req, res, next) => sendError(res, err));
+app.use((err, req, res, next) => sendError(err, res));
 
 // Start the server
 app.listen(process.env.PORT, () => {

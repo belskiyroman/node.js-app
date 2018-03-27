@@ -4,6 +4,7 @@
   "description": "Visual programming of controlled scenarios",
   "main": "./src/index.js",
   "scripts": {
+    "start": "node .",
     "test": "npm run lint && npm run secure",
     "lint": "./node_modules/.bin/eslint ./src; exit 0;",
     "secure": "./node_modules/.bin/nsp check"
@@ -19,9 +20,7 @@
     "cors": "^2.8.4",
     "dotenv": "^5.0.1",
     "express": "^4.16.2",
-    "express-session": "^1.15.6",
     "graphql": "^0.13.1",
-    "graphql-tag": "^2.8.0",
     "graphql-tools": "^2.21.0",
     "helmet": "^3.11.0",
     "jsonwebtoken": "^8.2.0",

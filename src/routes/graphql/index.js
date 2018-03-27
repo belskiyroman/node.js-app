@@ -1,5 +1,5 @@
-const passport = require('passport');
 const { graphqlExpress, graphiqlExpress } = require('apollo-server-express');
+const passport = require('passport');
 const schema = require('../../graph-api');
 const models = require('../../db/models');
 
