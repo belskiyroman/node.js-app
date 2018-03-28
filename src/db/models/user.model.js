@@ -39,11 +39,11 @@ module.exports = (sequelize, DataTypes) => {
     passwordHash: {
       field: 'password_hash',
       type: DataTypes.STRING,
-      allowNull: false,
     },
     password: {
       field: 'password',
       type: DataTypes.VIRTUAL,
+      allowNull: false,
       validate: {
         is: {
           args: STRONG_PASSWORD,

@@ -1,8 +1,10 @@
 'use strict';
 
+const tableName = 'users';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('users', {
+    await queryInterface.createTable(tableName, {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -35,18 +37,18 @@ module.exports = {
       }
     });
 
-    await queryInterface.addConstraint('users', ['email'], {
+    await queryInterface.addConstraint(tableName, ['email'], {
       type: 'unique',
       name: 'unique_user_email',
     });
 
-    return queryInterface.addIndex('users', {
+    return queryInterface.addIndex(tableName, {
       fields: ['email'],
       unique: true,
     });
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('users', {});
+    return queryInterface.dropTable(tableName, {});
   }
 };

@@ -1,5 +1,7 @@
 'use strict';
+
 const tableName = 'user_login';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     return queryInterface.createTable(tableName, {

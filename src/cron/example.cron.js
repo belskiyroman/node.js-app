@@ -5,11 +5,9 @@ const sequelize = require(config['models-path']).sequelize;
 
 const cron = module.exports = async () => {
   try {
-    await sequelize.query(`
-      DELETE FROM user_login
-      WHERE user_id IS NULL
-      OR exp < NOW();
-    `);
+    // await sequelize.query(`
+    //   # Your SQL
+    // `);
   } catch (err) {
     throw new Error(err);
   }

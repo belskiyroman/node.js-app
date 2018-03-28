@@ -14,10 +14,6 @@ const tokenDecode = require('../../utilities/token.utility').tokenDecode;
  */
 module.exports = (sequelize, DataTypes) => {
   const UserLogin = sequelize.define('UserLogin', {
-    ownerId: {
-      field: 'owner_id',
-      type: DataTypes.INTEGER,
-    },
     token: {
       field: 'token',
       type: DataTypes.TEXT,
@@ -45,7 +41,6 @@ module.exports = (sequelize, DataTypes) => {
       email: user.getDataValue('email'),
     });
     instance.setDataValue('token', token);
-    instance.setDataValue('ownerId', userId);
     instance.setDataValue('exp', tokenDecode(token).exp * 1000);
   });
 

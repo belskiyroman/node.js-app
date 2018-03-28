@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(passport.initialize());
 
 // routes
-require('./routes/auth-rest')(app);
+require('./routes/auth')(app);
 require('./routes/graphql')(app);
 
 // global error handler

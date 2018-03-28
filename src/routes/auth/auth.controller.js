@@ -1,7 +1,7 @@
 const sendError = require('../../utilities/errors.utility').sendError;
 const User = require('../../db/models').User;
 
-class AuthRESTController {
+class AuthController {
   constructor (UserModel, sendError) {
     this.UserModel = UserModel;
     this.sendError = sendError;
@@ -27,7 +27,7 @@ class AuthRESTController {
 
   async logout (req, res) {
     try {
-      await req.user.removeUserLogin(req.user.currentLogin);
+      await req.user.currentLogin.destroy();
       this._sendData(res);
     } catch (err) {
       this.sendError(err, res);
@@ -42,4 +42,4 @@ class AuthRESTController {
   };
 }
 
-module.exports = new AuthRESTController(User, sendError);
+module.exports = new AuthController(User, sendError);
