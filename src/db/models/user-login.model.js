@@ -1,16 +1,14 @@
 /**
- *
  * @module UserLogin
- * @type {UserLogin}
  */
 
-const tokenCreate = require('../../utilities/token.utility').tokenCreate;
-const tokenDecode = require('../../utilities/token.utility').tokenDecode;
+const tokenCreate = require('../../utilities/crypto.utility').tokenCreate;
+const tokenDecode = require('../../utilities/crypto.utility').tokenDecode;
 
 /**
- * @param sequelize {sequelize}
- * @param DataTypes {DataTypes}
- * @returns {UserLogin}
+ * @param {sequelize} sequelize
+ * @param {DataTypes} DataTypes
+ * @returns {Model}
  */
 module.exports = (sequelize, DataTypes) => {
   const UserLogin = sequelize.define('UserLogin', {

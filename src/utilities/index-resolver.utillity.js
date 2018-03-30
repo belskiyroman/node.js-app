@@ -37,6 +37,7 @@ const optionsDefault = {
   ext: ['.js'],
   inputCase: nameCase.DASH_CASE,
   outputCase: nameCase.CAMEL_CASE,
+  exclude: ['index.js'],
 };
 
 /**
@@ -56,18 +57,20 @@ const optionsDefault = {
  * @param {string[]} [options.ext] - array of file extensions for load as module
  * @param {nameCase|split} [options.inputCase] - function get a string and return an array of words
  * @param {nameCase|join} [options.outputCase] - function get an array of strings and return a key string for a module
+ * @param {string[]} [options.exclude] - List of excluded files
  * @param {function} [getModule] - function for load a module
  * @return {object} Module (all exports from a dir)
  */
 module.exports.load = function (pathToDir, options = optionsDefault, getModule = require) {
   try {
     const namespace = path.basename(pathToDir).replace(/[\W_]/g, ' ').split(' ');
+    options.exclude = options.exclude ? ['index.js', ...options.exclude] : ['index.js'];
 
     return fs.readdirSync(pathToDir).reduce((res, node) => {
       const pathToNode = path.join(pathToDir, node);
       const stat = fs.statSync(pathToNode);
       const [moduleName] = path.basename(node).split('.');
-      const isFileModule = stat.isFile() && options.ext.includes(path.extname(node)) && moduleName !== 'index';
+      const isFileModule = stat.isFile() && options.ext.includes(path.extname(node)) && !options.exclude.includes(node);
       const isDirModule = options.module && stat.isDirectory() && fs.existsSync(path.join(pathToNode, 'index.js'));
       const split = decoratorCase.get(options.inputCase).split || options.inputCase;
       const join = decoratorCase.get(options.outputCase).join || options.outputCase;

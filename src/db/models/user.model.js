@@ -1,15 +1,14 @@
 /**
  * @module User
- * @type {User}
  */
 
-const getHash = require('../../utilities/user.utility').getHash
-const STRONG_PASSWORD = require('../../constants/regexp.const').STRONG_PASSWORD
+const getHash = require('../../utilities/crypto.utility').getHash;
+const STRONG_PASSWORD = require('../../constants/regexp.const').STRONG_PASSWORD;
 
 /**
- * @param sequelize {sequelize}
- * @param DataTypes {DataTypes}
- * @returns {User}
+ * @param {sequelize} sequelize
+ * @param {DataTypes} DataTypes
+ * @returns {Model}
  */
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define('User', {
@@ -79,11 +78,14 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.UserLogin, {
       onDelete: 'CASCADE',
     });
+    User.hasMany(models.UserResetPassword, {
+      onDelete: 'CASCADE',
+    });
   };
 
   User.prototype.getHash = function (val) {
     return getHash(process.env.SECRET + val);
-  }
+  };
 
   User.prototype.comparePassword = function (val) {
     return this.getDataValue('passwordHash') === this.getHash(val);

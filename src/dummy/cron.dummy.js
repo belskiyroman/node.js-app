@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const config = require('../../.sequelizerc');
+const path = require('path');
+const config = require(path.join(path.resolve(__dirname), '../../.sequelizerc'));
 const sequelize = require(config['models-path']).sequelize;
 
 const cron = module.exports = async () => {

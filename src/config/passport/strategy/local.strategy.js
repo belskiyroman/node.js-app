@@ -6,14 +6,15 @@ const options = {
   session: false,
 };
 
-const handler = (email, password, done) => {
-  User.findOne({ where: {email: email} })
-    .then(user => {
-      user && user.comparePassword(password)
-        ? done(null, user)
-        : done(null, null);
-    })
-    .catch(done);
+const handler = async (email, password, done) => {
+  try {
+    const user = await User.findOne({ where: { email: email } });
+    user && user.comparePassword(password)
+      ? done(null, user)
+      : done(null, null);
+  } catch (err) {
+    done(err);
+  }
 };
 
 module.exports = new LocalStrategy(options, handler);
