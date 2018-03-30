@@ -2,6 +2,13 @@ const ValidationError = require('sequelize').ValidationError;
 const DatabaseError = require('sequelize').DatabaseError;
 const HTTP_CODE = require('../constants/http-code.const');
 
+const friendlySequelizeValidationError = (errors) => {
+  return errors.map(item => ({
+    path: item.path,
+    message: item.message
+  }));
+};
+
 class APIError extends Error {}
 class APIValidationError extends Error {
   constructor (...args) {
@@ -22,7 +29,7 @@ module.exports.sendError = (err, res, statusCode) => {
 
   if (err instanceof ValidationError) {
     status = HTTP_CODE.UNPROCESSABLE_ENTITY;
-    errors = this.friendlySequelizeValidationError(err.errors);
+    errors = friendlySequelizeValidationError(err.errors);
   } else if (err instanceof DatabaseError) {
     status = HTTP_CODE.SERVICE_UNAVAILABLE;
   } else if (err instanceof APIError) {
@@ -39,13 +46,4 @@ module.exports.sendError = (err, res, statusCode) => {
   if (process.env.NODE_ENV !== 'production') {
     console.error(err)
   }
-};
-
-module.exports.friendlySequelizeValidationError = (errors) => {
-  return errors.map(item => {
-    return {
-      path: item.path,
-      message: item.message
-    };
-  });
 };
