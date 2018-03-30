@@ -1,3 +1,5 @@
+const { EACH_LARGE_LETTER, EACH_LETTER_AFTER_SPACE, EACH_LETTER_OF_EACH_WORD } = require('../constants/regexp.const');
+
 module.exports.splitDashCase = function (str) {
   return str
     .toLowerCase()
@@ -14,7 +16,7 @@ module.exports.joinDashCase = function (arrStr) {
 
 module.exports.splitCamelCase = function (str) {
   return str
-    .replace(/([A-Z])/, ' $1')
+    .replace(EACH_LARGE_LETTER, ' $1')
     .toLowerCase()
     .trim()
     .split(' ');
@@ -25,12 +27,15 @@ module.exports.joinCamelCase = function (arrStr) {
     .join(' ')
     .toLowerCase()
     .trim()
-    .replace(/\s(.)/, (_, firstCharacter) => firstCharacter.toUpperCase());
+    .replace(
+      EACH_LETTER_AFTER_SPACE,
+      (_, firstCharacter) => firstCharacter.toUpperCase()
+    );
 };
 
 module.exports.splitPascalCase = function (str) {
   return str
-    .replace(/([A-Z])/, ' $1')
+    .replace(EACH_LARGE_LETTER, ' $1')
     .toLowerCase()
     .trim()
     .split(' ');
@@ -41,7 +46,10 @@ module.exports.joinPascalCase = function (arrStr) {
     .join(' ')
     .toLowerCase()
     .trim()
-    .replace(/(^.)|\s(.)/, (_, firstCharacter) => firstCharacter.toUpperCase());
+    .replace(
+      EACH_LETTER_OF_EACH_WORD,
+      (_, firstCharacter) => firstCharacter.toUpperCase()
+    );
 };
 
 module.exports.splitSnakeCase = function (str) {

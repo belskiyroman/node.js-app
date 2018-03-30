@@ -31,15 +31,6 @@ const decoratorCase = new Map()
     join: stringUtilities.joinSnakeCase,
   });
 
-const optionsDefault = {
-  module: true,
-  includeNameSpace: false,
-  ext: ['.js'],
-  inputCase: nameCase.DASH_CASE,
-  outputCase: nameCase.CAMEL_CASE,
-  exclude: ['index.js'],
-};
-
 /**
  * @callback split
  * @param {string} str
@@ -52,35 +43,52 @@ const optionsDefault = {
  *
  * @param {string} pathToDir
  * @param {object} [options]
- * @param {boolean} [options.module] - Load modules if module is a dir.
+ * @param {boolean} [options.module] - Load modules if module is a dir
+ * @param {boolean} [options.spred] - Merge all the fields of the modules in one object
  * @param {boolean} [options.includeNameSpace] - The namespace is the directory name of the module. Namespace will by add to each the key of module.
- * @param {string[]} [options.ext] - array of file extensions for load as module
+ * @param {string[]} [options.ext] - array of file extensions for moduleLoad as module
  * @param {nameCase|split} [options.inputCase] - function get a string and return an array of words
  * @param {nameCase|join} [options.outputCase] - function get an array of strings and return a key string for a module
  * @param {string[]} [options.exclude] - List of excluded files
- * @param {function} [getModule] - function for load a module
+ * @param {function} [getModule] - function for moduleLoad a module
  * @return {object} Module (all exports from a dir)
  */
-module.exports.load = function (pathToDir, options = optionsDefault, getModule = require) {
+module.exports.moduleLoad = function (pathToDir, options = {}, getModule = require) {
   try {
+    const optionsDefault = {
+      module: true,
+      spred: false,
+      includeNameSpace: false,
+      ext: ['.js'],
+      inputCase: nameCase.DASH_CASE,
+      outputCase: nameCase.CAMEL_CASE,
+      exclude: ['index.js'],
+    };
+    const opts = {...optionsDefault, ...options};
+
     const namespace = path.basename(pathToDir).replace(/[\W_]/g, ' ').split(' ');
-    options.exclude = options.exclude ? ['index.js', ...options.exclude] : ['index.js'];
 
     return fs.readdirSync(pathToDir).reduce((res, node) => {
       const pathToNode = path.join(pathToDir, node);
       const stat = fs.statSync(pathToNode);
       const [moduleName] = path.basename(node).split('.');
-      const isFileModule = stat.isFile() && options.ext.includes(path.extname(node)) && !options.exclude.includes(node);
-      const isDirModule = options.module && stat.isDirectory() && fs.existsSync(path.join(pathToNode, 'index.js'));
-      const split = decoratorCase.get(options.inputCase).split || options.inputCase;
-      const join = decoratorCase.get(options.outputCase).join || options.outputCase;
+      const isFileModule = stat.isFile() && opts.ext.includes(path.extname(node)) && !opts.exclude.includes(node);
+      const isDirModule = opts.module && stat.isDirectory() && fs.existsSync(path.join(pathToNode, 'index.js'));
+      const split = decoratorCase.get(opts.inputCase).split || opts.inputCase;
+      const join = decoratorCase.get(opts.outputCase).join || opts.outputCase;
 
       if (isFileModule || isDirModule) {
-        const keyParts = options.includeNameSpace
-          ? split(moduleName).push(...namespace)
+        const currentModule = getModule(pathToNode);
+
+        if (opts.spred && currentModule.constructor === Object) {
+          return Object.assign(res, currentModule);
+        }
+
+        const keyParts = opts.includeNameSpace
+          ? split(moduleName).concat(namespace)
           : split(moduleName);
         const key = join(keyParts);
-        res[key] = getModule(pathToNode);
+        res[key] = currentModule;
       }
 
       return res;
