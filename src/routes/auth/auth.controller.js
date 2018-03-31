@@ -8,8 +8,9 @@ const mailService = require('../../services/mail.service');
 const models = require('../../db/models');
 
 class AuthController {
-  constructor (sendError, { User, UserResetPassword }, generateHash, mailService) {
+  constructor (sendError, { sequelize, User, UserResetPassword }, generateHash, mailService) {
     this.sendError = sendError;
+    this.sequelize = sequelize;
     this.UserModel = User;
     this.UserResetPassword = UserResetPassword;
     this.generateHash = generateHash;
@@ -51,7 +52,9 @@ class AuthController {
       }
 
       const successMessage = { message: 'check your email' };
-      const user = await this.UserModel.find({ where: { email: req.body.email } });
+      const user = await this.UserModel.find({
+        where: { email: req.body.email }
+      });
 
       if (!user) {
         // this case for security when emails try to brute force
@@ -93,19 +96,27 @@ class AuthController {
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      const resetPassword = await this.UserResetPassword.find({ where: { reset_token: req.body.resetToken } });
+      await this.sequelize.transaction(async (transaction) => {
+        const resetPassword = await this.UserResetPassword.find({
+          where: { reset_token: req.body.resetToken }
+        });
 
-      if (!resetPassword) {
-        const err = new APIValidationError('resetToken', 'Invalid reset token.');
-        return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
-      }
+        if (!resetPassword) {
+          const err = new APIValidationError('resetToken', 'Invalid reset token.');
+          return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
+        }
 
-      await resetPassword.validate();
-      const user = await resetPassword.getUser();
-      user.password = req.body.password;
-      await user.save();
-      await resetPassword.destroy();
-      this._sendData(res);
+        await resetPassword.validate();
+        const user = await resetPassword.getUser();
+        user.password = req.body.password;
+        await user.save({transaction});
+        await this.UserResetPassword.destroy({
+          transaction,
+          where: { user_id: user.id }
+        });
+
+        this._sendData(res);
+      });
     } catch (err) {
       this.sendError(err, res);
     }
