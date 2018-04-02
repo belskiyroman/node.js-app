@@ -1,10 +1,8 @@
 const passport = require('passport');
-const localStrategy = require('./strategy/local.strategy');
-const jwtStrategy = require('./strategy/jwt.strategy');
 const session = require('./session');
 
-session.disableSession(passport)
-passport.use(localStrategy);
-passport.use(jwtStrategy);
+session.disableSession(passport);
+passport.use(require('./strategy/local.strategy'));
+passport.use(require('./strategy/jwt.strategy'));
 
 module.exports = passport;

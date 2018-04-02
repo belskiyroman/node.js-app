@@ -2,8 +2,7 @@
  * @module UserLogin
  */
 
-const tokenCreate = require('../../utilities/crypto.utility').tokenCreate;
-const tokenDecode = require('../../utilities/crypto.utility').tokenDecode;
+const { tokenCreate, tokenDecode } = require('../../utilities/crypto.utility');
 
 /**
  * @param {sequelize} sequelize

@@ -1,4 +1,4 @@
-const User = require('../../../db/models/index').User;
+const { User } = require('../../../db/models');
 const LocalStrategy = require('passport-local').Strategy;
 const options = {
   usernameField: 'email',

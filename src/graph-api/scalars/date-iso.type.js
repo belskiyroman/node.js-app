@@ -1,6 +1,4 @@
-const GraphQLScalarType = require('graphql').GraphQLScalarType;
-const GraphQLError = require('graphql/error').GraphQLError;
-const Kind = require('graphql/language').Kind;
+const { GraphQLError, Kind, GraphQLScalarType } = require('graphql');
 
 const DateISO = new GraphQLScalarType({
   name: 'DateISO',

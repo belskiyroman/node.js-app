@@ -1,4 +1,4 @@
-const GraphQLList = require('graphql').GraphQLList;
+const { GraphQLList } = require('graphql');
 const UserLoginType = require('../types/user-login.type');
 
 module.exports = {

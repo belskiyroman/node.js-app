@@ -1,5 +1,4 @@
-const GraphQLString = require('graphql/type/scalars').GraphQLString;
-const GraphQLInputObjectType = require('graphql').GraphQLInputObjectType;
+const { GraphQLString, GraphQLInputObjectType } = require('graphql');
 
 const UserInputType = new GraphQLInputObjectType({
   name: 'UserInput',

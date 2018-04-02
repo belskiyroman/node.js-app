@@ -1,6 +1,5 @@
-const GraphQLString = require('graphql/type/scalars').GraphQLString;
-const GraphQLObjectType = require('graphql').GraphQLObjectType;
-const DateISO = require('../scalars').DateISO;
+const { GraphQLString, GraphQLObjectType } = require('graphql');
+const { DateISO } = require('../scalars');
 
 const UserLoginType = new GraphQLObjectType({
   name: 'UserLogin',

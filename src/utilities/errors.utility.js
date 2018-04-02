@@ -1,5 +1,4 @@
-const ValidationError = require('sequelize').ValidationError;
-const DatabaseError = require('sequelize').DatabaseError;
+const { DatabaseError, ValidationError } = require('sequelize');
 const HTTP_CODE = require('../constants/http-code.const');
 
 const friendlySequelizeValidationError = (errors) => {

@@ -2,8 +2,8 @@
  * @module User
  */
 
-const getHash = require('../../utilities/crypto.utility').getHash;
-const STRONG_PASSWORD = require('../../constants/regexp.const').STRONG_PASSWORD;
+const { getHash } = require('../../utilities/crypto.utility');
+const { STRONG_PASSWORD } = require('../../constants');
 
 /**
  * @param {sequelize} sequelize

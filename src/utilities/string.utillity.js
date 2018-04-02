@@ -1,4 +1,8 @@
-const { EACH_LARGE_LETTER, EACH_LETTER_AFTER_SPACE, EACH_LETTER_OF_EACH_WORD } = require('../constants/regexp.const');
+const {
+  EACH_LARGE_LETTER,
+  EACH_LETTER_AFTER_SPACE,
+  EACH_LETTER_OF_EACH_WORD
+} = require('../constants/regexp.const');
 
 module.exports.splitDashCase = function (str) {
   return str

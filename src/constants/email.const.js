@@ -1,4 +1,2 @@
-module.exports = {
-  SUPPORT: 'support@localhost',
-  ADMIN: 'admin@localhost',
-};
+module.exports.SUPPORT = 'support@localhost';
+module.exports.ADMIN = 'admin@localhost';

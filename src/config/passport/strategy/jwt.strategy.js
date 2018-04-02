@@ -1,7 +1,7 @@
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const bearerExtractor = ExtractJwt.fromAuthHeaderAsBearerToken();
-const User = require('../../../db/models').User;
+const { User } = require('../../../db/models');
 
 const tokenExtractor = (req) => {
   return req.query.access_token || bearerExtractor(req);

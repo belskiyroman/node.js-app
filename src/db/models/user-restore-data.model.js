@@ -2,7 +2,7 @@
  * @module UserRestoreData
  */
 
-const generateHash = require('../../utilities/crypto.utility').generateHash;
+const { generateHash } = require('../../utilities/crypto.utility');
 /**
  * @param {Sequelize} sequelize
  * @param {DataTypes} DataTypes
