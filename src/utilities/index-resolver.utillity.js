@@ -45,7 +45,8 @@ const decoratorCase = new Map()
  * @param {object} [options]
  * @param {boolean} [options.module] - Load modules if module is a dir
  * @param {boolean} [options.spred] - Merge all the fields of the modules in one object
- * @param {boolean} [options.includeNameSpace] - The namespace is the directory name of the module. Namespace will by add to each the key of module.
+ * @param {string} [options.prefix] - Prefix will be add into start into each the key of module.
+ * @param {string} [options.postfix] - Postfix will be add into end into each the key of module.
  * @param {string[]} [options.ext] - array of file extensions for moduleLoad as module
  * @param {nameCase|split} [options.inputCase] - function get a string and return an array of words
  * @param {nameCase|join} [options.outputCase] - function get an array of strings and return a key string for a module
@@ -58,15 +59,14 @@ module.exports.moduleLoad = function (pathToDir, options = {}, getModule = requi
     const optionsDefault = {
       module: true,
       spred: false,
-      includeNameSpace: false,
+      prefix: '',
+      postfix: '',
       ext: ['.js'],
       inputCase: nameCase.DASH_CASE,
       outputCase: nameCase.CAMEL_CASE,
       exclude: ['index.js'],
     };
     const opts = {...optionsDefault, ...options};
-
-    const namespace = path.basename(pathToDir).replace(/[\W_]/g, ' ').split(' ');
 
     return fs.readdirSync(pathToDir).reduce((res, node) => {
       const pathToNode = path.join(pathToDir, node);
@@ -84,10 +84,7 @@ module.exports.moduleLoad = function (pathToDir, options = {}, getModule = requi
           return Object.assign(res, currentModule);
         }
 
-        const keyParts = opts.includeNameSpace
-          ? split(moduleName).concat(namespace)
-          : split(moduleName);
-        const key = join(keyParts);
+        const key = opts.prefix + join(split(moduleName)) + opts.postfix;
         res[key] = currentModule;
       }
 

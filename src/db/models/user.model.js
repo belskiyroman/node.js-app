@@ -20,6 +20,12 @@ module.exports = (sequelize, DataTypes) => {
       field: 'last_name',
       type: DataTypes.STRING
     },
+    emailConfirmed: {
+      field: 'email_confirmed',
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
     email: {
       field: 'email',
       type: DataTypes.STRING,
@@ -76,9 +82,16 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = function (models) {
     User.hasMany(models.UserLogin, {
+      as: {
+        singular: 'UserLogin',
+        plural: 'AllUserLogin',
+      },
       onDelete: 'CASCADE',
     });
-    User.hasMany(models.UserResetPassword, {
+
+    User.hasOne(models.UserRestoreData, {
+      as: 'RestoreData',
+      foreignKey: 'user_id',
       onDelete: 'CASCADE',
     });
   };

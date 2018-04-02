@@ -1,26 +1,72 @@
 const HTTP_CODE = require('../../constants/http-code.const');
-const SUPPORT_EMAIL = require('../../constants/email.const').SUPPORT;
-const ENSURE_TRAILING_SLASH = require('../../constants/regexp.const').ENSURE_TRAILING_SLASH;
-const sendError = require('../../utilities/errors.utility').sendError;
-const APIValidationError = require('../../utilities/errors.utility').APIValidationError;
-const generateHash = require('../../utilities/crypto.utility').generateHash;
+const { SUPPORT_EMAIL, ENSURE_TRAILING_SLASH } = require('../../constants');
+const { sendError, APIValidationError, generateHash } = require('../../utilities');
 const mailService = require('../../services/mail.service');
+const mail = require('../../mails');
 const models = require('../../db/models');
 
 class AuthController {
-  constructor (sendError, { sequelize, User, UserResetPassword }, generateHash, mailService) {
+  constructor (sendError, { sequelize, User, UserRestoreData }, generateHash, mailService, mail) {
     this.sendError = sendError;
     this.sequelize = sequelize;
     this.UserModel = User;
-    this.UserResetPassword = UserResetPassword;
+    this.UserRestoreDataModel = UserRestoreData;
     this.generateHash = generateHash;
     this.mailService = mailService;
+    this.mail = mail;
   }
 
   async registration (req, res) {
     try {
-      const newUser = await this.UserModel.create(req.body);
-      req.login(newUser, {session: false}, () => this.login(req, res));
+      req.login(
+        await this.UserModel.create(req.body),
+        { session: false },
+        () => this.sendEmailConfirmation(req, res)
+      );
+    } catch (err) {
+      this.sendError(err, res);
+    }
+  }
+
+  async sendEmailConfirmation ({ user, body }, res) {
+    try {
+      const userRestoreData = await user.getRestoreData();
+      const emailToken = await userRestoreData.createEmailToken();
+      const link = body.link ? body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
+      const mail = this.mail.registrationMail(SUPPORT_EMAIL, user.email, { emailToken, link });
+      await userRestoreData.save();
+      await this.mailService.sendMail(mail);
+      this._sendData(res, { message: 'check your email' });
+    } catch (err) {
+      this.sendError(err, res);
+    }
+  }
+
+  async emailConfirmation (req, res) {
+    try {
+      if (!req.body.emailToken) {
+        const err = new APIValidationError('emailToken', 'the emailToken param is required.');
+        return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
+      }
+
+      const userRestoreData = await this.UserRestoreDataModel.findOne({
+        where: { email_token: req.body.emailToken }
+      });
+
+      if (!userRestoreData) {
+        const err = new APIValidationError('emailToken', 'Invalid reset token.');
+        return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
+      }
+
+      await userRestoreData.validate({ fields: ['emailTokenExp'] });
+      await this.sequelize.transaction(async (transaction) => {
+        const user = await userRestoreData.getUser();
+        user.emailConfirmed = true;
+        await user.save({ transaction });
+        await userRestoreData.destroy({ transaction });
+      });
+
+      this._sendData(res);
     } catch (err) {
       this.sendError(err, res);
     }
@@ -51,30 +97,20 @@ class AuthController {
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      const successMessage = { message: 'check your email' };
-      const user = await this.UserModel.find({
+      const user = await this.UserModel.findOne({
         where: { email: req.body.email }
       });
 
-      if (!user) {
-        // this case for security when emails try to brute force
-        return this._sendData(res, successMessage);
+      if (user) {
+        const userRestoreData = await user.getRestoreData();
+        const resetToken = await userRestoreData.createResetToken();
+        const link = req.body.link ? req.body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
+        const mail = this.mail.forgotPasswordMail(SUPPORT_EMAIL, user.email, {link, resetToken});
+        await userRestoreData.save();
+        await this.mailService.sendMail(mail);
       }
 
-      const { resetToken } = await user.createUserResetPassword();
-      const link = req.body.link ? req.body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
-      const mail = {
-        from: SUPPORT_EMAIL,
-        to: user.email,
-        subject: 'Reset password',
-        text: `Hello,
-        This is a confirmation that the password for your account ${user.email} will be changed.
-        For confirm ${link ? 'going to the link' : 'use this token'}: ${link}${resetToken}.
-        If you did not request a password reset, please ignore this email.
-        `,
-      };
-
-      await this.mailService.sendMail(mail);
+      // if the user does not exist, we also send a success message for protection against brute force
       this._sendData(res, { message: 'check your email' });
     } catch (err) {
       this.sendError(err, res);
@@ -96,27 +132,24 @@ class AuthController {
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      await this.sequelize.transaction(async (transaction) => {
-        const resetPassword = await this.UserResetPassword.find({
-          where: { reset_token: req.body.resetToken }
-        });
-
-        if (!resetPassword) {
-          const err = new APIValidationError('resetToken', 'Invalid reset token.');
-          return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
-        }
-
-        await resetPassword.validate();
-        const user = await resetPassword.getUser();
-        user.password = req.body.password;
-        await user.save({transaction});
-        await this.UserResetPassword.destroy({
-          transaction,
-          where: { user_id: user.id }
-        });
-
-        this._sendData(res);
+      const userRestoreData = await this.UserRestoreDataModel.findOne({
+        where: { reset_token: req.body.resetToken }
       });
+
+      if (!userRestoreData) {
+        const err = new APIValidationError('resetToken', 'Invalid reset token.');
+        return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
+      }
+
+      await userRestoreData.validate({ fields: ['resetTokenExp'] });
+      await this.sequelize.transaction(async (transaction) => {
+        const user = await userRestoreData.getUser();
+        user.password = req.body.password;
+        await user.save({ transaction });
+        await userRestoreData.destroy({ transaction });
+      });
+
+      this._sendData(res);
     } catch (err) {
       this.sendError(err, res);
     }
@@ -130,4 +163,4 @@ class AuthController {
   };
 }
 
-module.exports = new AuthController(sendError, models, generateHash, mailService);
+module.exports = new AuthController(sendError, models, generateHash, mailService, mail);

@@ -6,6 +6,6 @@ module.exports = {
 
   resolve (parent, args, {req, models}) {
     const { gte } = models.Sequelize.Op;
-    return req.user.getUserLogins({ where: { exp: { [gte]: new Date() } } });
+    return req.user.getAllUserLogin({ where: { exp: { [gte]: new Date() } } });
   }
 };

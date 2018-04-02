@@ -6,9 +6,9 @@ const sequelize = require(config['models-path']).sequelize;
 
 const cron = module.exports = async () => {
   try {
-    // await sequelize.query(`
+    await sequelize.query(`
     //   # Your SQL
-    // `);
+    `);
   } catch (err) {
     throw new Error(err);
   }

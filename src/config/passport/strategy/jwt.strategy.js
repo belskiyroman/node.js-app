@@ -17,7 +17,7 @@ const handler = async (req, payload, done) => {
     const user = await User.findById(payload.id);
 
     if (user) {
-      let logins = await user.getUserLogins({ where: { token: tokenExtractor(req) } });
+      let logins = await user.getAllUserLogin({ where: { token: tokenExtractor(req) } });
       user.currentLogin = logins[0];
     }
 
