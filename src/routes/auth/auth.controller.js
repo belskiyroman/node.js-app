@@ -1,36 +1,41 @@
 const HTTP_CODE = require('../../constants/http-code.const');
-const { SUPPORT_EMAIL, ENSURE_TRAILING_SLASH } = require('../../constants');
-const { sendError, APIValidationError, generateHash } = require('../../utilities');
+const { SUPPORT: SUPPORT_EMAIL, ENSURE_TRAILING_SLASH } = require('../../constants');
+const { sendError, APIValidationError } = require('../../utilities');
 const mailService = require('../../services/mail.service');
 const mail = require('../../mails');
 const models = require('../../db/models');
 
 class AuthController {
-  constructor (sendError, { sequelize, User, UserRestoreData }, generateHash, mailService, mail) {
+  constructor (sendError, { sequelize, User, UserRestoreData }, mailService, mail) {
     this.sendError = sendError;
     this.sequelize = sequelize;
     this.UserModel = User;
     this.UserRestoreDataModel = UserRestoreData;
-    this.generateHash = generateHash;
     this.mailService = mailService;
     this.mail = mail;
   }
 
   async registration (req, res) {
     try {
+      const user = await this.UserModel.create(req.body);
+      const fail = async (err) => {
+        await user.destroy();
+        this.sendError(err, res);
+      };
+
       req.login(
-        await this.UserModel.create(req.body),
+        user,
         { session: false },
-        () => this.sendEmailConfirmation(req, res)
+        () => this.sendEmailConfirmation(req, res, fail)
       );
     } catch (err) {
       this.sendError(err, res);
     }
   }
 
-  async sendEmailConfirmation ({ user, body }, res) {
+  async sendEmailConfirmation ({ user, body }, res, next) {
     try {
-      const userRestoreData = await user.getRestoreData();
+      const userRestoreData = await user.takeUserRestoreData();
       const emailToken = await userRestoreData.createEmailToken();
       const link = body.link ? body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
       const mail = this.mail.registrationMail(SUPPORT_EMAIL, user.email, { emailToken, link });
@@ -38,7 +43,9 @@ class AuthController {
       await this.mailService.sendMail(mail);
       this._sendData(res, { message: 'check your email' });
     } catch (err) {
-      this.sendError(err, res);
+      next
+        ? next(err)
+        : this.sendError(err, res);
     }
   }
 
@@ -59,14 +66,19 @@ class AuthController {
       }
 
       await userRestoreData.validate({ fields: ['emailTokenExp'] });
+      const user = await userRestoreData.getUser();
+
       await this.sequelize.transaction(async (transaction) => {
-        const user = await userRestoreData.getUser();
         user.emailConfirmed = true;
         await user.save({ transaction });
         await userRestoreData.destroy({ transaction });
       });
 
-      this._sendData(res);
+      req.login(
+        user,
+        { session: false },
+        () => this.login(req, res)
+      );
     } catch (err) {
       this.sendError(err, res);
     }
@@ -102,7 +114,7 @@ class AuthController {
       });
 
       if (user) {
-        const userRestoreData = await user.getRestoreData();
+        const userRestoreData = await user.takeUserRestoreData();
         const resetToken = await userRestoreData.createResetToken();
         const link = req.body.link ? req.body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
         const mail = this.mail.forgotPasswordMail(SUPPORT_EMAIL, user.email, {link, resetToken});
@@ -163,4 +175,4 @@ class AuthController {
   };
 }
 
-module.exports = new AuthController(sendError, models, generateHash, mailService, mail);
+module.exports = new AuthController(sendError, models, mailService, mail);

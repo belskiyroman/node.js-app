@@ -96,6 +96,11 @@ module.exports = (sequelize, DataTypes) => {
     });
   };
 
+  User.prototype.takeUserRestoreData = async function () {
+    const restoreData = await this.getRestoreData() || await this.createRestoreData();
+    return restoreData;
+  };
+
   User.prototype.getHash = function (val) {
     return getHash(process.env.SECRET + val);
   };

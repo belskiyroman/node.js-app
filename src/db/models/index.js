@@ -33,5 +33,6 @@ db.Sequelize = Sequelize;
  * @type {Object} models
  * @property {User} User
  * @property {UserLogin} UserLogin
+ * @property {UserRestoreData} UserRestoreData
  */
 module.exports = db;
