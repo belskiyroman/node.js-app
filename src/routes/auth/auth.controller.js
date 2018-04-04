@@ -6,46 +6,36 @@ const mail = require('../../mails');
 const models = require('../../db/models');
 
 class AuthController {
-  constructor (sendError, { sequelize, User, UserRestoreData }, mailService, mail) {
+  constructor (sendError, { sequelize, User }, mailService, mail) {
     this.sendError = sendError;
     this.sequelize = sequelize;
     this.UserModel = User;
-    this.UserRestoreDataModel = UserRestoreData;
     this.mailService = mailService;
     this.mail = mail;
   }
 
   async registration (req, res) {
     try {
-      const user = await this.UserModel.create(req.body);
-      const fail = async (err) => {
-        await user.destroy();
-        this.sendError(err, res);
-      };
-
       req.login(
-        user,
+        this.UserModel.build(req.body),
         { session: false },
-        () => this.sendEmailConfirmation(req, res, fail)
+        () => this.sendEmailConfirmation(req, res)
       );
     } catch (err) {
       this.sendError(err, res);
     }
   }
 
-  async sendEmailConfirmation ({ user, body }, res, next) {
+  async sendEmailConfirmation ({ user, body }, res) {
     try {
-      const userRestoreData = await user.takeUserRestoreData();
-      const emailToken = await userRestoreData.createEmailToken();
+      const emailToken = await user.createEmailToken();
       const link = body.link ? body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
       const mail = this.mail.registrationMail(SUPPORT_EMAIL, user.email, { emailToken, link });
-      await userRestoreData.save();
       await this.mailService.sendMail(mail);
+      await user.save();
       this._sendData(res, { message: 'check your email' });
     } catch (err) {
-      next
-        ? next(err)
-        : this.sendError(err, res);
+      this.sendError(err, res);
     }
   }
 
@@ -56,23 +46,18 @@ class AuthController {
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      const userRestoreData = await this.UserRestoreDataModel.findOne({
+      const user = await this.UserModel.findOne({
         where: { email_token: req.body.emailToken }
       });
 
-      if (!userRestoreData) {
-        const err = new APIValidationError('emailToken', 'Invalid reset token.');
+      if (!user) {
+        const err = new APIValidationError('emailToken', 'Invalid the emailToken.');
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      await userRestoreData.validate({ fields: ['emailTokenExp'] });
-      const user = await userRestoreData.getUser();
-
-      await this.sequelize.transaction(async (transaction) => {
-        user.emailConfirmed = true;
-        await user.save({ transaction });
-        await userRestoreData.destroy({ transaction });
-      });
+      await user.validate({ fields: ['emailTokenExp'] });
+      user.confirmEmail();
+      await user.save();
 
       req.login(
         user,
@@ -114,12 +99,11 @@ class AuthController {
       });
 
       if (user) {
-        const userRestoreData = await user.takeUserRestoreData();
-        const resetToken = await userRestoreData.createResetToken();
+        const resetToken = await user.createResetToken();
         const link = req.body.link ? req.body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
         const mail = this.mail.forgotPasswordMail(SUPPORT_EMAIL, user.email, {link, resetToken});
-        await userRestoreData.save();
         await this.mailService.sendMail(mail);
+        await user.save();
       }
 
       // if the user does not exist, we also send a success message for protection against brute force
@@ -144,22 +128,18 @@ class AuthController {
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      const userRestoreData = await this.UserRestoreDataModel.findOne({
+      const user = await this.UserModel.findOne({
         where: { reset_token: req.body.resetToken }
       });
 
-      if (!userRestoreData) {
-        const err = new APIValidationError('resetToken', 'Invalid reset token.');
+      if (!user) {
+        const err = new APIValidationError('resetToken', 'Invalid the resetToken.');
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
-      await userRestoreData.validate({ fields: ['resetTokenExp'] });
-      await this.sequelize.transaction(async (transaction) => {
-        const user = await userRestoreData.getUser();
-        user.password = req.body.password;
-        await user.save({ transaction });
-        await userRestoreData.destroy({ transaction });
-      });
+      await user.validate({ fields: ['resetTokenExp'] });
+      user.setNewPassword(req.body.password);
+      await user.save();
 
       this._sendData(res);
     } catch (err) {

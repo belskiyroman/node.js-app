@@ -2,8 +2,20 @@
  * @module User
  */
 
-const { getHash } = require('../../utilities/crypto.utility');
+const { ValidationError } = require('sequelize');
+const { getHash, generateHash } = require('../../utilities/crypto.utility');
 const { STRONG_PASSWORD } = require('../../constants');
+
+const expired = (value) => {
+  if (new Date(value) < new Date()) {
+    throw new ValidationError('token expired')
+  }
+};
+
+const confirmationToken = async () => ({
+  token: await generateHash(),
+  expire: Date.now() + process.env.CONFIRMATION_TOKEN_TTL * 1000,
+});
 
 /**
  * @param {sequelize} sequelize
@@ -70,7 +82,25 @@ module.exports = (sequelize, DataTypes) => {
     },
     currentLogin: {
       type: DataTypes.VIRTUAL
-    }
+    },
+    resetToken: {
+      field: 'reset_token',
+      type: DataTypes.TEXT,
+    },
+    resetTokenExp: {
+      field: 'reset_token_exp',
+      type: DataTypes.DATE,
+      validate: { expired }
+    },
+    emailToken: {
+      field: 'email_token',
+      type: DataTypes.TEXT,
+    },
+    emailTokenExp: {
+      field: 'email_token_exp',
+      type: DataTypes.DATE,
+      validate: { expired }
+    },
   }, {
     underscoredAll: true,
     underscored: true,
@@ -88,17 +118,33 @@ module.exports = (sequelize, DataTypes) => {
       },
       onDelete: 'CASCADE',
     });
-
-    User.hasOne(models.UserRestoreData, {
-      as: 'RestoreData',
-      foreignKey: 'user_id',
-      onDelete: 'CASCADE',
-    });
   };
 
-  User.prototype.takeUserRestoreData = async function () {
-    const restoreData = await this.getRestoreData() || await this.createRestoreData();
-    return restoreData;
+  User.prototype.createResetToken = async function () {
+    const { token, expire } = await confirmationToken();
+    this.setDataValue('resetToken', token);
+    this.setDataValue('resetTokenExp', expire);
+    return token;
+  };
+
+  User.prototype.setNewPassword = function () {
+    this.setDataValue('resetToken', null);
+    this.setDataValue('resetTokenExp', null);
+    return this;
+  };
+
+  User.prototype.createEmailToken = async function () {
+    const { token, expire } = await confirmationToken();
+    this.setDataValue('emailToken', token);
+    this.setDataValue('emailTokenExp', expire);
+    return token;
+  };
+
+  User.prototype.confirmEmail = function () {
+    this.setDataValue('emailToken', null);
+    this.setDataValue('emailTokenExp', null);
+    this.setDataValue('emailConfirmed', true);
+    return this;
   };
 
   User.prototype.getHash = function (val) {
