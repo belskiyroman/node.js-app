@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const stringUtilities = require('../utilities/string.utillity');
+const stringUtilities = require('./string.utility');
 
 /**
  *
