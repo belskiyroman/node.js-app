@@ -1,0 +1,15 @@
+{
+  "env": {
+    "node": true,
+    "mocha": true
+  },
+  "extends": ["standard"],
+  "plugins": ["mocha"],
+  "rules": {
+    "semi": 0,
+    "comma-style": 1,
+    "comma-dangle": 0,
+    "no-unused-expressions": "off",
+    "no-unused-vars": "off"
+  }
+}
