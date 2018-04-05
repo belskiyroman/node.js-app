@@ -1,6 +1,7 @@
 .idea/
 .idea/**/*
 node_modules
+.nyc_output
 dist
 *.log
 .DS_Store

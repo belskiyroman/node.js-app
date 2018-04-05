@@ -1,5 +1,11 @@
 const passport = require('passport');
-const controller = require('./auth.controller');
+const { sendError } = require('../../utilities');
+const mailService = require('../../services/mail.service');
+const mail = require('../../mails');
+const models = require('../../db/models');
+const AuthController = require('./auth.controller');
+
+const controller = new AuthController(sendError, models, mailService, mail);
 
 module.exports = function (app) {
   app.post('/api/registration', (...args) => controller.registration(...args));

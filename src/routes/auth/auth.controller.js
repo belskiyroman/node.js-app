@@ -1,19 +1,25 @@
 const HTTP_CODE = require('../../constants/http-code.const');
 const { SUPPORT: SUPPORT_EMAIL, ENSURE_TRAILING_SLASH } = require('../../constants');
-const { sendError, APIValidationError } = require('../../utilities');
-const mailService = require('../../services/mail.service');
-const mail = require('../../mails');
-const models = require('../../db/models');
+const { APIValidationError } = require('../../utilities');
 
 class AuthController {
-  constructor (sendError, { sequelize, User }, mailService, mail) {
+  constructor (sendError, { User }, mailService, mail) {
     this.sendError = sendError;
-    this.sequelize = sequelize;
     this.UserModel = User;
     this.mailService = mailService;
     this.mail = mail;
   }
 
+  /**
+   *
+   * @param req
+   * @param req.body.password
+   * @param req.body.email
+   * @param req.body.firstName
+   * @param req.body.lastName
+   * @param res
+   * @return {Promise.<void>}
+   */
   async registration (req, res) {
     try {
       req.login(
@@ -26,6 +32,14 @@ class AuthController {
     }
   }
 
+  /**
+   *
+   * @param req
+   * @param {User} req.user
+   * @param {string} [req.body.link]
+   * @param res
+   * @return {Promise.<void>}
+   */
   async sendEmailConfirmation ({ user, body }, res) {
     try {
       const emailToken = await user.createEmailToken();
@@ -39,6 +53,13 @@ class AuthController {
     }
   }
 
+  /**
+   *
+   * @param req
+   * @param {string} req.body.emailToken
+   * @param res
+   * @return {Promise.<void>}
+   */
   async emailConfirmation (req, res) {
     try {
       if (!req.body.emailToken) {
@@ -69,38 +90,60 @@ class AuthController {
     }
   }
 
-  async login (req, res) {
+  /**
+   *
+   * @param req
+   * @param {User} req.user
+   * @param res
+   * @return {Promise.<void>}
+   */
+  async login ({ user }, res) {
     try {
-      const { token } = await req.user.createUserLogin();
+      const { token } = await user.createUserLogin();
       this._sendData(res, { token });
     } catch (err) {
       this.sendError(err, res);
     }
   }
 
-  async logout (req, res) {
+  /**
+   *
+   * @param req
+   * @param {User} req.user
+   * @param res
+   * @return {Promise.<void>}
+   */
+  async logout ({ user }, res) {
     try {
-      await req.user.currentLogin.destroy();
+      await user.currentLogin.destroy();
       this._sendData(res);
     } catch (err) {
       this.sendError(err, res);
     }
   }
 
-  async forgotPassword (req, res) {
+  /**
+   *
+   * @param req
+   * @param {string} req.body.email
+   * @param {string} [req.body.link]
+   * @param res
+   * @return {Promise.<void>}
+   */
+  async forgotPassword ({ body }, res) {
     try {
-      if (!req.body.email) {
+      if (!body.email) {
         const err = new APIValidationError('email', 'the email param is required.');
         return this.sendError(err, res, HTTP_CODE.BAD_REQUEST);
       }
 
       const user = await this.UserModel.findOne({
-        where: { email: req.body.email }
+        where: { email: body.email }
       });
 
       if (user) {
         const resetToken = await user.createResetToken();
-        const link = req.body.link ? req.body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
+        const link = body.link ? body.link.replace(ENSURE_TRAILING_SLASH, '$1/') : '';
         const mail = this.mail.forgotPasswordMail(SUPPORT_EMAIL, user.email, {link, resetToken});
         await this.mailService.sendMail(mail);
         await user.save();
@@ -113,14 +156,22 @@ class AuthController {
     }
   }
 
-  async resetPassword (req, res) {
+  /**
+   *
+   * @param req
+   * @param {string} req.body.resetToken
+   * @param {string} req.body.password
+   * @param res
+   * @return {Promise.<void>}
+   */
+  async resetPassword ({ body }, res) {
     try {
       const validationError = {};
 
-      if (!req.body.resetToken) {
+      if (!body.resetToken) {
         validationError.resetToken = 'the resetToken param is required.'
       }
-      if (!req.body.password) {
+      if (!body.password) {
         validationError.password = 'the password param is required.'
       }
       if (Object.keys(validationError).length) {
@@ -129,7 +180,7 @@ class AuthController {
       }
 
       const user = await this.UserModel.findOne({
-        where: { reset_token: req.body.resetToken }
+        where: { reset_token: body.resetToken }
       });
 
       if (!user) {
@@ -138,7 +189,7 @@ class AuthController {
       }
 
       await user.validate({ fields: ['resetTokenExp'] });
-      user.setNewPassword(req.body.password);
+      user.setNewPassword(body.password);
       await user.save();
 
       this._sendData(res);
@@ -155,4 +206,4 @@ class AuthController {
   };
 }
 
-module.exports = new AuthController(sendError, models, mailService, mail);
+module.exports = AuthController;
