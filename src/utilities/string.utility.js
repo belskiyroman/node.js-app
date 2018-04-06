@@ -1,7 +1,7 @@
 const {
   EACH_LARGE_LETTER,
-  EACH_LETTER_AFTER_SPACE,
-  EACH_LETTER_OF_EACH_WORD
+  EACH_LETTER_OF_EACH_WORD,
+  FIRST_LETTER_IN_WORD
 } = require('../constants/regexp.const');
 
 module.exports.splitDashCase = function (str) {
@@ -23,7 +23,8 @@ module.exports.splitCamelCase = function (str) {
     .replace(EACH_LARGE_LETTER, ' $1')
     .toLowerCase()
     .trim()
-    .split(' ');
+    .split(' ')
+    .filter(Boolean);
 };
 
 module.exports.joinCamelCase = function (arrStr) {
@@ -32,8 +33,12 @@ module.exports.joinCamelCase = function (arrStr) {
     .toLowerCase()
     .trim()
     .replace(
-      EACH_LETTER_AFTER_SPACE,
-      (_, firstCharacter) => firstCharacter.toUpperCase()
+      EACH_LETTER_OF_EACH_WORD,
+      ($1, $2, firstCharacter) => firstCharacter.toUpperCase()
+    )
+    .replace(
+      FIRST_LETTER_IN_WORD,
+      (firstCharacter) => firstCharacter.toLowerCase()
     );
 };
 
@@ -42,7 +47,8 @@ module.exports.splitPascalCase = function (str) {
     .replace(EACH_LARGE_LETTER, ' $1')
     .toLowerCase()
     .trim()
-    .split(' ');
+    .split(' ')
+    .filter(Boolean);
 };
 
 module.exports.joinPascalCase = function (arrStr) {
@@ -52,7 +58,7 @@ module.exports.joinPascalCase = function (arrStr) {
     .trim()
     .replace(
       EACH_LETTER_OF_EACH_WORD,
-      (_, firstCharacter) => firstCharacter.toUpperCase()
+      ($1, $2, firstCharacter) => firstCharacter.toUpperCase()
     );
 };
 
