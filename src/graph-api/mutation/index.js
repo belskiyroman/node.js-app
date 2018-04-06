@@ -1,5 +1,5 @@
 const { GraphQLObjectType } = require('graphql');
-const loadGQLFields = require('../../utilities/index-resolver.utility').moduleLoad;
+const loadGQLFields = require('../../utilities/index-resolver.utility').loadModule;
 
 const MutationType = new GraphQLObjectType({
   name: 'Mutation',

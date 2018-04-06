@@ -47,14 +47,14 @@ const decoratorCase = new Map()
  * @param {boolean} [options.spred] - Merge all the fields of the modules in one object
  * @param {string} [options.prefix] - Prefix will be add into start into each the key of module.
  * @param {string} [options.postfix] - Postfix will be add into end into each the key of module.
- * @param {string[]} [options.ext] - array of file extensions for moduleLoad as module
+ * @param {string[]} [options.ext] - array of file extensions for loadModule as module
  * @param {nameCase|split} [options.inputCase] - function get a string and return an array of words
  * @param {nameCase|join} [options.outputCase] - function get an array of strings and return a key string for a module
  * @param {string[]} [options.exclude] - List of excluded files
- * @param {function} [getModule] - function for moduleLoad a module
+ * @param {function} [getModule] - function for loadModule a module
  * @return {object} Module (all exports from a dir)
  */
-module.exports.moduleLoad = function (pathToDir, options = {}, getModule = require) {
+module.exports.loadModule = function (pathToDir, options = {}, getModule = require) {
   try {
     const optionsDefault = {
       module: true,

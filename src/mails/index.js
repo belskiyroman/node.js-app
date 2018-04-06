@@ -1,1 +1,1 @@
-module.exports = require('../utilities/index-resolver.utility').moduleLoad(__dirname, { postfix: 'Mail' });
+module.exports = require('../utilities/index-resolver.utility').loadModule(__dirname, { postfix: 'Mail' });

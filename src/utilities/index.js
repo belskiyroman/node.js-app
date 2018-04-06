@@ -1,1 +1,1 @@
-module.exports = require('./index-resolver.utility').moduleLoad(__dirname, { spred: true });
+module.exports = require('./index-resolver.utility').loadModule(__dirname, { spred: true });

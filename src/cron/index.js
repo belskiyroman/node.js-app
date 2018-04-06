@@ -1,4 +1,4 @@
-const crons = require('../utilities/index-resolver.utility').moduleLoad(__dirname);
+const crons = require('../utilities/index-resolver.utility').loadModule(__dirname);
 
 Promise.all(
   Object
