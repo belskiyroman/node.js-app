@@ -1,9 +1,10 @@
 const { GraphQLObjectType } = require('graphql');
-const loadGQLFields = require('../../utilities/index-resolver.utility').loadModule;
+const { loadModule: loadGQLFields, splitDashCase } = require('../../utilities');
+const inputCase = (str) => splitDashCase(str.split('.')[0]);
 
 const MutationType = new GraphQLObjectType({
   name: 'Mutation',
-  fields: loadGQLFields(__dirname)
+  fields: loadGQLFields(__dirname, { inputCase })
 });
 
 module.exports = MutationType;

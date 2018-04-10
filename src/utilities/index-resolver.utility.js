@@ -52,9 +52,11 @@ const decoratorCase = new Map()
  * @param {nameCase|join} [options.outputCase] - function get an array of strings and return a key string for a module
  * @param {string[]} [options.exclude] - List of excluded files
  * @param {function} [getModule] - function for loadModule a module
+ * @param {object} [fileSystem] - fs module
+ * @param {object} [pathModule] - fs module
  * @return {object} Module (all exports from a dir)
  */
-module.exports.loadModule = function (pathToDir, options = {}, getModule = require) {
+module.exports.loadModule = function (pathToDir, options = {}, getModule = require, fileSystem = fs, pathModule = path) {
   try {
     const optionsDefault = {
       module: true,
@@ -62,20 +64,20 @@ module.exports.loadModule = function (pathToDir, options = {}, getModule = requi
       prefix: '',
       postfix: '',
       ext: ['.js'],
+      exclude: ['index.js'],
       inputCase: nameCase.DASH_CASE,
       outputCase: nameCase.CAMEL_CASE,
-      exclude: ['index.js'],
     };
     const opts = {...optionsDefault, ...options};
 
-    return fs.readdirSync(pathToDir).reduce((res, node) => {
-      const pathToNode = path.join(pathToDir, node);
-      const stat = fs.statSync(pathToNode);
-      const [moduleName] = path.basename(node).split('.');
-      const isFileModule = stat.isFile() && opts.ext.includes(path.extname(node)) && !opts.exclude.includes(node);
-      const isDirModule = opts.module && stat.isDirectory() && fs.existsSync(path.join(pathToNode, 'index.js'));
-      const split = decoratorCase.get(opts.inputCase).split || opts.inputCase;
-      const join = decoratorCase.get(opts.outputCase).join || opts.outputCase;
+    return fileSystem.readdirSync(pathToDir).reduce((res, node) => {
+      const pathToNode = pathModule.join(pathToDir, node);
+      const stat = fileSystem.statSync(pathToNode);
+      const moduleName = pathModule.basename(node).split('.').slice(0, -1).join('.');
+      const isFileModule = stat.isFile() && opts.ext.includes(pathModule.extname(node)) && !opts.exclude.includes(node);
+      const isDirModule = opts.module && stat.isDirectory() && fileSystem.existsSync(pathModule.join(pathToNode, 'index.js'));
+      const split = decoratorCase.get(opts.inputCase) ? decoratorCase.get(opts.inputCase).split : opts.inputCase;
+      const join = decoratorCase.get(opts.outputCase) ? decoratorCase.get(opts.outputCase).join : opts.outputCase;
 
       if (isFileModule || isDirModule) {
         const currentModule = getModule(pathToNode);
