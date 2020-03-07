@@ -1,3 +1,4 @@
+
 # Installation
 - Install **postgresql** (you can change a db in config file ```"./src/config/database.js"```)
 - Install dependecies ```npm install ``` or ```yarn install```.
@@ -16,6 +17,7 @@
 - **SESSION_TTL** - the lifetime of the user token
 - **SECRET** - the secret text ("salt") for generate tokens
 
+
 _*You can use the dotenv file to set project variables.
 Just create the env.development file in the config directory and put your variables there._
 
@@ -27,7 +29,6 @@ Just create the env.development file in the config directory and put your variab
     npm run test:coverage # run the unit tests and check coverage
     npm run lint # run eslint
     npm run secure # check security of npm dependencies (NSP)
-
 ```
 
 #### The convention of the file naming
